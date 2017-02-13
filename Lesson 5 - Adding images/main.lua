@@ -8,34 +8,51 @@ gameObjects = {}
 nextObjectIndex = 0
 
 gameCells = {}
-cellSize = 20
+cellSize = 50
 
-letterSpeed = 5
+-- since we are no longer using letters we should rename our variable to be more descriptive.
+--letterSpeed = 5
+objectSpeed = 15
 
 function love.load()
 	
-	local cellCountX = math.ceil(love.graphics.getWidth() / cellSize)
-	local cellCountY = math.ceil(love.graphics.getHeight() / cellSize)
-	local cellsPadding = 2
+	-- I'm removing this section because we don't need to initalize the cells
+	-- we can just check if a cell is valid before using it, we'll create a function for this.
 	
-	for x = -cellsPadding, cellCountX + cellsPadding do
-		gameCells[x] = {}
-		for y = -cellsPadding, cellCountY + cellsPadding do
-			gameCells[x][y] = {}
-		end
-	end
+	--local cellCountX = math.ceil(love.graphics.getWidth() / cellSize)
+	--local cellCountY = math.ceil(love.graphics.getHeight() / cellSize)
+	--local cellsPadding = 2
+	
+	--for x = -cellsPadding, cellCountX + cellsPadding do
+	--	gameCells[x] = {}
+	--	for y = -cellsPadding, cellCountY + cellsPadding do
+	--		gameCells[x][y] = {}
+	--	end
+	--end
 
 end
 
 function love.draw()
 
+	-- Here we add a function call to clear the screen and make it blueish
+	-- this is because we have an image with black parts and it'll blend in 
+	-- this function take four arguments, red (0-255), blue (0-255), green(0-255),
+	-- and alpha (0-255)
+	love.graphics.clear( 0, 64, 255, 255 )
+
 	for key, value in pairs(gameObjects) do
 
 		local objMin = getMin(value)
 		
-		love.graphics.setColor(255,255,255,255)
+		--love.graphics.setColor(255,255,255,255)
 		
-		love.graphics.print(value.char, objMin.x, objMin.y)
+		-- Here we need to change what drawing function we are using,
+		-- because we are not using text character any more
+		-- we will use love.graphics.draw which take a drawble (an image in this case)
+		-- and position, it has other options too, however we don't need them so
+		-- i won't get into it now. You can read about it on the wiki too
+		--love.graphics.print(value.char, objMin.x, objMin.y)
+		love.graphics.draw( value.image, objMin.x, objMin.y )
 		
 	end
 	
@@ -79,6 +96,32 @@ function love.update(deltaTime)
 			end
 		end
 		
+		-- we are no longer using the key pressed for the character, so we need
+		-- another way to create our objects.
+		-- This for loop checks reads all the key entries in the keysTable
+		-- if they key's value is true then we will check which key it is
+		-- and we will create a new object if it was space.
+		-- also if we hold the space bar down it will create a new object
+		-- every timestep
+		for key, value in pairs(keysTable) do
+			
+			if value then
+				
+				if key == "space" then
+					-- For the first argument we now give it the file name of the image we
+					-- want to use.
+					-- in this case it's called, character_frame_1.png , it's frame 1 because we'll
+					-- animated it later
+					newObject("character_frame_1.png", 
+							  newVector(love.graphics.getWidth() * 0.5, love.graphics.getHeight() * 0.5 ),
+							  newVector(-objectSpeed + (math.random() * (objectSpeed * 2)), -objectSpeed + (math.random() * (objectSpeed * 2))), 
+							  15)
+				end
+				
+			end
+		
+		end
+		
 	end
 	
 end
@@ -87,10 +130,12 @@ function love.keypressed( key )
    
    keysTable[key] = true
 
-   newObject(key, 
-			 newVector(love.graphics.getWidth() * 0.5, love.graphics.getHeight() * 0.5 ),
-			 newVector(-letterSpeed + (math.random() * (letterSpeed * 2)), -letterSpeed + (math.random() * (letterSpeed * 2))), 
-			 15)
+    -- we are removing the new object function call from key pressed and palacing
+    -- it in the love.update, when the space bar is pressed.
+    --newObject(key, 
+	--		 newVector(love.graphics.getWidth() * 0.5, love.graphics.getHeight() * 0.5 ),
+	--		 newVector(-letterSpeed + (math.random() * (letterSpeed * 2)), -letterSpeed + (math.random() * (letterSpeed * 2))), 
+	--		 15)
    
 end
 
@@ -100,24 +145,52 @@ function love.keyreleased( key )
 
 end
 
-function newObject(character, position, velocity, timeToLive)
-
-	local curFont = love.graphics.getFont()
+-- We will be changing the first variable to an image name instead of
+-- a character
+-- we will need to go to each place we use this function and make sure
+-- we are passing the correct information to this function.
+function newObject(imageName, position, velocity, timeToLive)
+	
+	-- we don't need this variable because we are no longer using characters
+	-- so we don't need the font information
+	--local curFont = love.graphics.getFont()
 	
 	local newObj = {}
 	newObj.id = nextObjectIndex
 	newObj.created = gameTime
 	newObj.TTL = timeToLive
-	newObj.char = character
+	-- Removing this key from the object, we won't be drawing characters anymore
+	-- we'll start drawing images
+	-- newObj.char = character
+	-- Adding an image key, it gets its it's value from a function
+	-- that loads the image from a file as ImageData, which has useful function.
+	newObj.image = love.graphics.newImage(imageName)
 	newObj.pos = position
 	newObj.vel = velocity
-	newObj.width = curFont:getWidth(character)
-	newObj.height = curFont:getHeight()
+	-- we need to change where we get the width and height from
+	-- since we are not using the font information.
+	-- we will use the width and height funcitons of the ImageData
+	newObj.width = newObj.image:getWidth()
+	newObj.height = newObj.image:getHeight()
 	
 	gameObjects[nextObjectIndex] = newObj
 	
 	nextObjectIndex = nextObjectIndex + 1
 	
+end
+
+-- This function will check if the requested cell is valid, if it's not
+-- it will make it a valid cell
+function validateCell(cellPos)
+
+	if not gameCells[cellPos.x] then
+		gameCells[cellPos.x] = {}
+	end
+	
+	if not gameCells[cellPos.x][cellPos.y] then
+		gameCells[cellPos.x][cellPos.y] = {}
+	end
+
 end
 
 function newVector(xPos, yPos)
@@ -200,13 +273,8 @@ function removeFromCells(obj)
 
 	for key, value in pairs(cellList) do
 		
-		if not gameCells[value.x] then
-			gameCells[value.x] = {}
-		end
+		validateCell(value)
 		
-		if not gameCells[value.x][value.y] then
-			gameCells[value.x][value.y] = {}
-		end
 		if gameCells[value.x][value.y][obj.id] then
 			gameCells[value.x][value.y][obj.id] = nil
 		end
@@ -220,13 +288,7 @@ function placeInCells(obj)
 	
 	for key, value in pairs(cellList) do
 	
-		if not gameCells[value.x] then
-			gameCells[value.x] = {}
-		end
-		
-		if not gameCells[value.x][value.y] then
-			gameCells[value.x][value.y] = {}
-		end
+		validateCell(value)
 		
 		gameCells[value.x][value.y][obj.id] = obj
 		

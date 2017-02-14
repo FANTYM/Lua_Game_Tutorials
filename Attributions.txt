@@ -1,0 +1,12 @@
+Art assest were found on OpenGameArt.Com
+
+Specific assets listed below.
+
+player character:
+http://opengameart.org/content/2d-character-animation-sprite
+
+green guy:
+http://opengameart.org/content/bevouliin-green-horn-monster-sprite-sheets
+
+ground tiles:
+http://opengameart.org/content/seamless-platformer-tile-set

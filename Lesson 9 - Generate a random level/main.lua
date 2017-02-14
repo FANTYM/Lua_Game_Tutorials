@@ -58,6 +58,12 @@ function love.load()
 				  newVector(0,0),
 				  false,
 				  -1)
+				  
+		newObject("middle.png",
+		          newVector(x * 64, (currentHeight + 1) * 64),
+				  newVector(0,0),
+				  false,
+				  -1)
 		
 	end
 	
